@@ -28,9 +28,12 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    // Connect to the "insertDB" database and access its "haiku" collection
+    // Connect to the "coffeshop" database and access its "coffe" collection
     const database = client.db("Coffeshop");
     const coffeCollection = database.collection("coffe");
+
+    // Connect to the "coffeshop" and "users collection"
+    const usersCollection = database.collection("Users");
 
     //add coffe to the database
     app.post("/coffes", async (req, res) => {
@@ -90,6 +93,45 @@ async function run() {
 
       res.send(result);
       console.log("Single update request");
+    });
+
+    //  users starts from here
+    //addidng users to database
+    app.post("/users", async (req, res) => {
+      let user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    //getting users from database
+    app.get("/users", async (req, res) => {
+      let result = await usersCollection.find().toArray();
+
+      res.send(result);
+      console.log("users was get");
+    });
+
+    //deleling users from database
+    app.delete("/users/:id", async (req, res) => {
+      let id = req.params.id;
+      let query = { _id: new ObjectId(id) };
+      let result = await usersCollection.deleteOne(query);
+
+      res.send(result);
+    });
+    //updating user last login data
+    app.patch("/users", async (req, res) => {
+      let email = req.body.email;
+      let query = { email: email };
+
+      const updateTime = {
+        $set: {
+          lastSignInTime: req.body.lastSignInTime,
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateTime);
+
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
